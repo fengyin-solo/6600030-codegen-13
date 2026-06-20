@@ -37,3 +37,29 @@ export interface FEAResult {
   maxStress: number;
   reactionForces: { nodeId: number; fx: number; fy: number }[];
 }
+
+export type GroupCategory = 'region' | 'usage' | 'custom';
+
+export interface ElementGroup {
+  id: string;
+  name: string;
+  category: GroupCategory;
+  color: string;
+  elementIds: number[];
+  description?: string;
+}
+
+export interface GroupStats {
+  groupId: string;
+  elementCount: number;
+  avgStress: number;
+  maxStress: number;
+  minStress: number;
+  avgStrain: number;
+  maxStrain: number;
+  avgForce: number;
+  maxForce: number;
+  compressionCount: number;
+  tensionCount: number;
+  stressStdDev: number;
+}
