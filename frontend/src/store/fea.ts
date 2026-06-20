@@ -111,10 +111,18 @@ export const useFEAStore = defineStore('fea', () => {
 
   function addElementsToGroup(groupId: string, elementIds: number[]) {
     const group = groups.value.find((g) => g.id === groupId);
-    if (group) {
-      const newIds = elementIds.filter((id) => !group.elementIds.includes(id));
-      group.elementIds.push(...newIds);
+    if (!group) return;
+
+    for (const elementId of elementIds) {
+      for (const g of groups.value) {
+        if (g.id !== groupId) {
+          g.elementIds = g.elementIds.filter((id) => id !== elementId);
+        }
+      }
     }
+
+    const newIds = elementIds.filter((id) => !group.elementIds.includes(id));
+    group.elementIds.push(...newIds);
   }
 
   function removeElementsFromGroup(groupId: string, elementIds: number[]) {
@@ -139,6 +147,8 @@ export const useFEAStore = defineStore('fea', () => {
 
   function autoGroupByRegion(): void {
     if (model.value.nodes.length === 0) return;
+
+    clearAllGroups();
 
     const xs = model.value.nodes.map((n) => n.x);
     const ys = model.value.nodes.map((n) => n.y);
@@ -172,16 +182,26 @@ export const useFEAStore = defineStore('fea', () => {
     }
 
     const colors = ['#ef4444', '#f97316', '#22c55e', '#3b82f6'];
+    const newGroups: ElementGroup[] = [];
     for (let i = 0; i < regionGroups.length; i++) {
       if (regionGroups[i].elementIds.length > 0) {
-        const id = createGroup(regionGroups[i].name, 'region', colors[i], `按几何区域自动划分`);
-        addElementsToGroup(id, regionGroups[i].elementIds);
+        newGroups.push({
+          id: generateGroupId(),
+          name: regionGroups[i].name,
+          category: 'region',
+          color: colors[i],
+          elementIds: [...regionGroups[i].elementIds],
+          description: '按几何区域自动划分',
+        });
       }
     }
+    groups.value = newGroups;
   }
 
   function autoGroupByUsage(): void {
     if (model.value.elements.length === 0) return;
+
+    clearAllGroups();
 
     const horizontal: number[] = [];
     const vertical: number[] = [];
@@ -201,18 +221,38 @@ export const useFEAStore = defineStore('fea', () => {
       else diagonal.push(el.id);
     }
 
+    const newGroups: ElementGroup[] = [];
     if (horizontal.length > 0) {
-      const id = createGroup('水平构件', 'usage', '#3b82f6', '水平方向受力构件');
-      addElementsToGroup(id, horizontal);
+      newGroups.push({
+        id: generateGroupId(),
+        name: '水平构件',
+        category: 'usage',
+        color: '#3b82f6',
+        elementIds: [...horizontal],
+        description: '水平方向受力构件',
+      });
     }
     if (vertical.length > 0) {
-      const id = createGroup('竖向构件', 'usage', '#22c55e', '竖向承重构件');
-      addElementsToGroup(id, vertical);
+      newGroups.push({
+        id: generateGroupId(),
+        name: '竖向构件',
+        category: 'usage',
+        color: '#22c55e',
+        elementIds: [...vertical],
+        description: '竖向承重构件',
+      });
     }
     if (diagonal.length > 0) {
-      const id = createGroup('斜向构件', 'usage', '#a855f7', '斜向支撑/桁架腹杆');
-      addElementsToGroup(id, diagonal);
+      newGroups.push({
+        id: generateGroupId(),
+        name: '斜向构件',
+        category: 'usage',
+        color: '#a855f7',
+        elementIds: [...diagonal],
+        description: '斜向支撑/桁架腹杆',
+      });
     }
+    groups.value = newGroups;
   }
 
   function clearAllGroups(): void {
@@ -222,6 +262,8 @@ export const useFEAStore = defineStore('fea', () => {
   }
 
   function computeGroupStats(groupId: string): GroupStats | null {
+    if (!result.value) return null;
+
     const group = groups.value.find((g) => g.id === groupId);
     if (!group || group.elementIds.length === 0) return null;
 
@@ -352,6 +394,10 @@ export const useFEAStore = defineStore('fea', () => {
     return count;
   });
 
+  const isSolved = computed(() => {
+    return result.value !== null;
+  });
+
   return {
     model,
     result,
@@ -366,6 +412,7 @@ export const useFEAStore = defineStore('fea', () => {
     showGroupColors,
     allGroupStats,
     ungroupedElementCount,
+    isSolved,
     maxStress,
     maxDisplacement,
     elementColors,

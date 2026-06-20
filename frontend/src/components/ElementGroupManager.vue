@@ -291,7 +291,7 @@ function getForceCharacteristic(stats: { tensionCount: number; compressionCount:
 
           <!-- Stats (when expanded) -->
           <div v-if="store.selectedGroupId === group.id" class="mt-2 ml-5 space-y-2">
-            <div v-if="getGroupStats(group.id)" class="grid grid-cols-2 gap-1 text-[10px]">
+            <div v-if="store.isSolved && getGroupStats(group.id)" class="grid grid-cols-2 gap-1 text-[10px]">
               <div class="bg-slate-800 rounded p-1.5">
                 <div class="text-slate-500">平均应力</div>
                 <div class="text-slate-200 font-mono font-bold">
@@ -329,8 +329,9 @@ function getForceCharacteristic(stats: { tensionCount: number; compressionCount:
                 </div>
               </div>
             </div>
-            <div v-else class="text-[10px] text-slate-500 italic">
-              先点击「求解 FEA」获取统计结果
+            <div v-else class="text-[10px] text-slate-500 italic flex items-center gap-1.5">
+              <span class="text-amber-500">⚠</span>
+              <span>请先点击「求解 FEA」获取统计结果和受力特征</span>
             </div>
 
             <div class="flex gap-1">
